@@ -1,0 +1,5 @@
+!pip install pytorch_lightning==1.6.1 -q
+!pip install transformers -q
+!pip install git+https://github.com/openai/CLIP.git -q
+!pip install git+https://github.com/katsura-jp/pytorch-cosine-annealing-with-warmup -q
+!pip install -q kaggle numpy
