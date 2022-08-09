@@ -34,10 +34,12 @@ class TextImageDataset(Dataset):
         path = Path(folder)
 
         text_files = [*path.glob('**/*.txt')]
+        print(len(text_files))
         image_files = [
             *path.glob('**/*.png'), *path.glob('**/*.jpg'),
             *path.glob('**/*.jpeg'), *path.glob('**/*.bmp')
         ]
+        print(len(image_files))
 
         text_files = {text_file.stem: text_file for text_file in text_files}
         image_files = {image_file.stem: image_file for image_file in image_files}
