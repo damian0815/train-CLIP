@@ -35,7 +35,7 @@ class CLIPWrapper(pl.LightningModule):
     @property
     def num_training_steps(self) -> int:
         """Total training steps inferred from datamodule and devices."""
-        dataset = self.train_dataloader()
+        dataset = self.trainer.datamodule.train_dataloader() #self.train_dataloader()
         if self.trainer.max_steps:
             return self.trainer.max_steps
 
@@ -46,7 +46,16 @@ class CLIPWrapper(pl.LightningModule):
             num_devices = max(num_devices, self.trainer.tpu_cores)
 
         effective_batch_size = dataset.batch_size * self.trainer.accumulate_grad_batches * num_devices
-        return (dataset_size // effective_batch_size) * self.trainer.max_epochs
+        size = (dataset_size // effective_batch_size) * self.trainer.max_epochs
+        print(dataset.batch_size)
+        print(self.trainer.accumulate_grad_batches )
+        print(num_devices)
+        print(effective_batch_size)
+        print(self.trainer.max_epochs)
+        print(size)
+
+       
+        return size
 
     # Training loss: https://github.com/openai/CLIP/issues/83
     # Mini-batching thanks to https://github.com/crowsonkb / https://twitter.com/RiversHaveWings
@@ -128,6 +137,9 @@ class CLIPWrapper(pl.LightningModule):
             "ViT-L/14-336px": 2e-5
         }[self.model_name]
 
+        #self.trainer.reset_train_dataloader()
+        #print(self.train_dataloader)#.loaders  # access it here.
+        
         optimizer = torch.optim.AdamW(
             self.model.parameters(),
             lr=lr,
@@ -141,13 +153,14 @@ class CLIPWrapper(pl.LightningModule):
 
         # Source: https://github.com/openai/CLIP/issues/107
         # Use pip install 'git+https://github.com/katsura-jp/pytorch-cosine-annealing-with-warmup'
+        print(self.num_training_steps)
         lr_scheduler = CosineAnnealingWarmupRestarts(
             optimizer,
             first_cycle_steps=self.num_training_steps,
             cycle_mult=1.0,
             max_lr=lr,
             min_lr=0,
-            warmup_steps=2000
+            warmup_steps=100
         )
 
         return {'optimizer': optimizer, 'lr_scheduler': lr_scheduler}
