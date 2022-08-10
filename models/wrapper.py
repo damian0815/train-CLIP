@@ -44,17 +44,12 @@ class CLIPWrapper(pl.LightningModule):
         num_devices = max(1, self.trainer.num_gpus, self.trainer.num_processes)
         if self.trainer.tpu_cores:
             num_devices = max(num_devices, self.trainer.tpu_cores)
-
+        print(num_devices)
         effective_batch_size = dataset.batch_size * self.trainer.accumulate_grad_batches * num_devices
         size = (dataset_size // effective_batch_size) * self.trainer.max_epochs
-        print(dataset.batch_size)
-        print(self.trainer.accumulate_grad_batches )
-        print(num_devices)
         print(effective_batch_size)
-        print(self.trainer.max_epochs)
-        print(size)
-
-       
+        print(dataset_size)
+        print(dataset_size // effective_batch_size)
         return size
 
     # Training loss: https://github.com/openai/CLIP/issues/83
@@ -131,6 +126,7 @@ class CLIPWrapper(pl.LightningModule):
             "RN50x4": 5e-4,
             "RN50x16": 4e-4,
             "RN50x64": 3.6e-4,
+            "ViT-B/Arch": 5e-4,
             "ViT-B/32": 5e-4,
             "ViT-B/16": 5e-4,
             "ViT-L/14": 4e-4,
@@ -160,7 +156,7 @@ class CLIPWrapper(pl.LightningModule):
             cycle_mult=1.0,
             max_lr=lr,
             min_lr=0,
-            warmup_steps=100
+            warmup_steps=10
         )
 
         return {'optimizer': optimizer, 'lr_scheduler': lr_scheduler}
