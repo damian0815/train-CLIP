@@ -36,7 +36,7 @@ class CLIPWrapper(pl.LightningModule):
     def num_training_steps(self) -> int:
         """Total training steps inferred from datamodule and devices."""
         dataset = self.trainer.datamodule.train_dataloader() #self.train_dataloader()
-        if self.trainer.max_steps:
+        if self.trainer.max_steps and self.trainer.max_steps > 0:
             return self.trainer.max_steps
 
         dataset_size = len(dataset)
