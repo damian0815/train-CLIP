@@ -17,9 +17,9 @@ def main(hparams):
     model = CLIPWrapper(hparams.model_name, config, hparams.minibatch_size)
     del hparams.model_name
     dm = TextImageDataModule.from_argparse_args(hparams)
-    trainer = Trainer.from_argparse_args(hparams, precision=16, max_epochs=32)
+    trainer = Trainer.from_argparse_args(hparams, precision=16, max_epochs=100, weights_save_path="/content/drive/Shareddrives/DiffusionTraining/archive/lightening-clip")
     trainer.fit(model, dm)
-    torch.save(model.state_dict(), "/content/model.pt")
+    torch.save(model.state_dict(), "/content/drive/Shareddrives/DiffusionTraining/archive/lightening-clip/model.pt")
 
 
 if __name__ == '__main__':
