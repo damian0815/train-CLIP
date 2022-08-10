@@ -86,15 +86,23 @@ class TextImageDataset(Dataset):
         image_file = self.image_files[key]
 
         descriptions = text_file.read_text().replace('\n', ' ')
-        descriptions = list(filter(lambda t: len(t) > 0, descriptions))
+        description = descriptions
+        
+        """
+        #descriptions = list(filter(lambda t: len(t) > 0, descriptions))
         try:
-            description = choice(descriptions)
+            description = choice([descriptions)
         except IndexError as zero_captions_in_file_ex:
             print(f"An exception occurred trying to load file {text_file}.")
             print(f"Skipping index {ind}")
             return self.skip_sample(ind)
-        if len(description) > 77:
-          description = description[:77] if random() > 0.5 else description[-77:]
+        """
+        tLen = len(description)
+        if tLen > 77: 
+            start = randint(0, tLen -  77)
+            end =start + 77 
+            print(f"Text too long {tLen}, taking elements from {start} to {end}")
+            description = description[start:end]
         tokenized_text = description if self.custom_tokenizer else clip.tokenize(description)[0]
 
         try:
