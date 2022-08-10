@@ -1,6 +1,6 @@
 # Originally found in https://github.com/lucidrains/DALLE-pytorch
 from pathlib import Path
-from random import randint, choice
+from random import randint, choice, random
 
 import PIL
 import argparse
@@ -93,7 +93,8 @@ class TextImageDataset(Dataset):
             print(f"An exception occurred trying to load file {text_file}.")
             print(f"Skipping index {ind}")
             return self.skip_sample(ind)
-
+        if len(description) > 77:
+          description = description[:77] if random() > 0.5 else description[77:]
         tokenized_text = description if self.custom_tokenizer else clip.tokenize(description)[0]
 
         try:
