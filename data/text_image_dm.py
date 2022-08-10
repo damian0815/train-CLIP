@@ -101,7 +101,7 @@ class TextImageDataset(Dataset):
         if tLen > 77: 
             start = randint(0, tLen -  77)
             end =start + 77 
-            print(f"Text too long {tLen}, taking elements from {start} to {end}")
+            #print(f"Text too long {tLen}, taking elements from {start} to {end}")
             description = description[start:end]
         tokenized_text = description if self.custom_tokenizer else clip.tokenize(description)[0]
 
