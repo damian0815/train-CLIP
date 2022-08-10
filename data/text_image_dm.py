@@ -94,7 +94,7 @@ class TextImageDataset(Dataset):
             print(f"Skipping index {ind}")
             return self.skip_sample(ind)
         if len(description) > 77:
-          description = description[:77] if random() > 0.5 else description[77:]
+          description = description[:77] if random() > 0.5 else description[-77:]
         tokenized_text = description if self.custom_tokenizer else clip.tokenize(description)[0]
 
         try:
