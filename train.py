@@ -18,6 +18,7 @@ def main(hparams):
     dm = TextImageDataModule.from_argparse_args(hparams)
     trainer = Trainer.from_argparse_args(hparams, precision=16, max_epochs=32)
     trainer.fit(model, dm)
+    torch.save(model.state_dict(), "/content/model.pt")
 
 
 if __name__ == '__main__':
