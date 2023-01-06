@@ -1,15 +1,32 @@
 # Originally found in https://github.com/lucidrains/DALLE-pytorch
 from pathlib import Path
 from random import randint, choice, random
+from typing import Generator
 
 import PIL
 import argparse
 import clip
 import torch
+import os
 
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as T
 from pytorch_lightning import LightningDataModule
+
+
+def collect_captioned_image_paths(root_folder:str) -> Generator[tuple[str, str], None, None]:
+    for directory, _, filenames in os.walk(root_folder):
+        image_extensions = ['.jpg', '.jpeg']
+        image_filenames = [f for f in filenames if os.path.splitext(f)[1] in image_extensions]
+        for image_filename in image_filenames:
+            caption_filename = os.path.splitext(image_filename)[0] + '.txt'
+            caption_path = os.path.join(directory, caption_filename)
+            if not os.path.exists(caption_path):
+                continue
+
+            image_path = os.path.join(directory, image_filename)
+            yield image_path, caption_path
+
 
 
 class TextImageDataset(Dataset):
@@ -31,24 +48,13 @@ class TextImageDataset(Dataset):
         """
         super().__init__()
         self.shuffle = shuffle
-        path = Path(folder)
 
-        text_files = [*path.glob('**/*.txt')]
-        print(len(text_files))
-        image_files = [
-            *path.glob('**/*.png'), *path.glob('**/*.jpg'),
-            *path.glob('**/*.jpeg'), *path.glob('**/*.bmp')
-        ]
-        print(len(image_files))
+        matched_image_text_pairs = list(collect_captioned_image_paths(folder))
+        self.keys = [image_path for image_path, _ in matched_image_text_pairs]
+        self.text_files = {image_path: Path(text_path) for image_path, text_path in matched_image_text_pairs}
+        self.image_files = {image_path: Path(image_path) for image_path, _ in matched_image_text_pairs}
+        print(f"found {len(self.keys)} image/text file pairs")
 
-        text_files = {text_file.stem: text_file for text_file in text_files}
-        image_files = {image_file.stem: image_file for image_file in image_files}
-
-        keys = (image_files.keys() & text_files.keys())
-
-        self.keys = list(keys)
-        self.text_files = {k: v for k, v in text_files.items() if k in keys}
-        self.image_files = {k: v for k, v in image_files.items() if k in keys}
         self.resize_ratio = resize_ratio
         self.image_transform = T.Compose([
             T.Lambda(self.fix_img),
@@ -56,6 +62,7 @@ class TextImageDataset(Dataset):
                                 scale=(self.resize_ratio, 1.),
                                 ratio=(1., 1.)),
             T.ToTensor(),
+            # same values for mean and SD as in one of the CLIP config.json files on huggingface's diffusers repo
             T.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
         ])
         self.custom_tokenizer = custom_tokenizer
@@ -157,7 +164,11 @@ class TextImageDataModule(LightningDataModule):
         return parser
     
     def setup(self, stage=None):
-        self.dataset = TextImageDataset(self.folder, image_size=self.image_size, resize_ratio=self.resize_ratio, shuffle=self.shuffle, custom_tokenizer=not self.custom_tokenizer is None)
+        self.dataset = TextImageDataset(self.folder,
+                                        image_size=self.image_size,
+                                        resize_ratio=self.resize_ratio,
+                                        shuffle=self.shuffle,
+                                        custom_tokenizer=not self.custom_tokenizer is None)
     
     def train_dataloader(self):
         return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=self.shuffle, num_workers=self.num_workers, drop_last=True , collate_fn=self.dl_collate_fn)
